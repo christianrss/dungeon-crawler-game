@@ -17,6 +17,9 @@ moving_right = False
 moving_up = False
 moving_down = False
 
+#define font
+font = pygame.font.Font("assets/fonts/AtariClassic.ttf", 20)
+
 #helper function to scale image
 def scale_img(image, scale):
     w = image.get_width()
@@ -45,6 +48,24 @@ for mob in mob_types:
         animation_list.append(temp_list)
     mob_animations.append(animation_list)
 
+#damage text class
+class DamageText(pygame.sprite.Sprite):
+    def __init__(self, x, y, damage, color):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = font.render(damage, True, color)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.counter = 0
+
+    def update(self):
+        #move damage text up
+        self.rect.y -= 1
+        #delete the counter after a few seconds
+        self.counter += 1
+        if self.counter > 30:
+            self.kill()
+
+
 #create player
 player = Character(100, 100, 100, mob_animations, 0)
 
@@ -59,6 +80,7 @@ enemy_list = []
 enemy_list.append(enemy)
 
 #create sprite groups
+damage_text_group = pygame.sprite.Group()
 arrow_group = pygame.sprite.Group()
 
 # main game loop
@@ -93,7 +115,11 @@ while run:
     if arrow:
         arrow_group.add(arrow)
     for arrow in arrow_group:
-        arrow.update(enemy_list)
+        damage, damage_pos = arrow.update(enemy_list)
+        if damage:
+            damage_text = DamageText(damage_pos.centerx, damage_pos.y, str(damage), constants.RED)
+            damage_text_group.add(damage_text)
+    damage_text_group.update()
 
     print(arrow_group)
 
@@ -105,6 +131,7 @@ while run:
 
     for arrow in arrow_group:
         arrow.draw(screen)
+    damage_text_group.draw(screen)
 
     print(enemy.health)
 
